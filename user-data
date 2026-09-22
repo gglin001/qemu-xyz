@@ -1,0 +1,14 @@
+#cloud-config
+users:
+  - name: agi
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/UyG2mYh9otEF8mf6WX4eAQq4zoRup+/XbAq7W750/ allen@allens-Mac-mini.local
+chpasswd:
+  list: |
+    agi:0
+  expire: false
+ssh_pwauth: true
