@@ -54,17 +54,23 @@ EOF
 echo "root:0" | chpasswd
 sh auto-install.sh
 apk update
-
 echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.24/community" >>/etc/apk/repositories
 apk update
 
 adduser -D -s /bin/ash agi
 echo "agi:0" | chpasswd
 
+apk add sudo-rs
 addgroup agi wheel
-apk add doas
-mkdir -p /etc/doas.d
-echo "permit persist :wheel" >/etc/doas.d/doas.conf
+echo "%wheel ALL=(ALL) ALL" >/etc/sudoers
+echo "@includedir /etc/sudoers.d" >/etc/sudoers
+mkdir -p /etc/sudoers.d
+echo "agi ALL=(ALL:ALL) ALL" >/etc/sudoers.d/agi
+chmod 0440 /etc/sudoers.d/agi
+# test
+su - agi
+sudo whoami
+su - root
 
 mkdir -p /home/agi/.ssh
 cat <<'EOF' >/home/agi/.ssh/authorized_keys
