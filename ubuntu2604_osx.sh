@@ -1,21 +1,10 @@
 ###############################################################################
 
-# wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
-#   -O jammy-server-cloudimg-amd64.img
-aria2c -x 16 https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
-
-cp jammy-server-cloudimg-amd64.img ubuntu2204.qcow2
-
-qemu-img resize ubuntu2204.qcow2 100G
+aria2c -x 16 https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-arm64.img
+cp resolute-server-cloudimg-arm64.img ubuntu2604_arm64.qcow2
+qemu-img resize ubuntu2604_arm64.qcow2 100G
 
 ###############################################################################
-
-# sudo apt install libguestfs-tools --no-install-recommends --no-install-suggests
-# sudo virt-customize -a ubuntu2204.qcow2 --root-password password:0
-
-# ubuntu
-sudo apt install cloud-image-utils
-# sudo apt install cloud-utils
 
 # macos
 # build cloud-utils
@@ -42,16 +31,10 @@ cloud-localds seed.iso user-data meta-data
 
 ###############################################################################
 
-# ubuntu
-newgrp kvm
-sudo usermod -aG kvm $USER
-
 qemu-system-x86_64 \
-  -enable-kvm \
-  -cpu host \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2204.qcow2,format=qcow2 \
+  -drive file=ubuntu2604_arm64.qcow2,format=qcow2 \
   -drive file=seed.iso,media=cdrom \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
@@ -123,15 +106,11 @@ sudo apt install -y make
 ###############################################################################
 
 # later
-newgrp kvm
-sudo usermod -aG kvm $USER
 
 qemu-system-x86_64 \
-  -enable-kvm \
-  -cpu host \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2204.qcow2,format=qcow2 \
+  -drive file=ubuntu2604_arm64.qcow2,format=qcow2 \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
   -nographic

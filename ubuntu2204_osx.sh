@@ -1,6 +1,5 @@
 ###############################################################################
 
-# virt-customize
 # wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
 #   -O jammy-server-cloudimg-amd64.img
 aria2c -x 16 https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
@@ -8,6 +7,8 @@ aria2c -x 16 https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg
 cp jammy-server-cloudimg-amd64.img ubuntu2204.qcow2
 
 qemu-img resize ubuntu2204.qcow2 100G
+
+###############################################################################
 
 # macos
 # build cloud-utils
@@ -31,6 +32,8 @@ EOF
 touch meta-data
 
 cloud-localds seed.iso user-data meta-data
+
+###############################################################################
 
 qemu-system-x86_64 \
   -m 2G \
