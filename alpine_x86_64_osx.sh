@@ -103,6 +103,8 @@ ssh -p 2222 agi@127.0.0.1
 
 ###############################################################################
 
+echo "Welcome to Alpine!" | sudo tee /etc/motd
+
 apk update
 apk add git
 
