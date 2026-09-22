@@ -31,11 +31,14 @@ cloud-localds seed.iso user-data meta-data
 
 ###############################################################################
 
-qemu-system-x86_64 \
+qemu-system-aarch64 \
+  -machine virt,accel=hvf \
+  -cpu host \
+  -bios edk2-aarch64-code.fd \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2604_arm64.qcow2,format=qcow2 \
-  -drive file=seed.iso,media=cdrom \
+  -drive file=ubuntu2604_arm64.qcow2,format=qcow2,if=virtio \
+  -drive file=seed.iso,format=raw,if=virtio,readonly=on \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
   -nographic
@@ -47,8 +50,8 @@ ssh -p 2222 agi@127.0.0.1
 
 df -h /
 lsblk
-sudo growpart /dev/sda 1
-sudo resize2fs /dev/sda1
+sudo growpart /dev/vda 1
+sudo resize2fs /dev/vda1
 df -h /
 
 ###############################################################################
@@ -72,23 +75,46 @@ systemd-analyze blame
 systemd-analyze critical-chain
 
 # https://help.mirrors.cernet.edu.cn/ubuntu/
-printf '%s' '# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
-deb https://mirrors.ustc.edu.cn/ubuntu/ jammy main restricted universe multiverse
-# deb-src https://mirrors.ustc.edu.cn/ubuntu/ jammy main restricted universe multiverse
-deb https://mirrors.ustc.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
-# deb-src https://mirrors.ustc.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse
-deb https://mirrors.ustc.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
-# deb-src https://mirrors.ustc.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse
+printf '%s' 'Types: deb
+URIs: https://mirrors.ustc.edu.cn/ubuntu
+Suites: resolute resolute-updates resolute-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+# Types: deb-src
+# URIs: https://mirrors.ustc.edu.cn/ubuntu
+# Suites: resolute resolute-updates resolute-backports
+# Components: main restricted universe multiverse
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 # 以下安全更新软件源为镜像站配置
-deb https://mirrors.ustc.edu.cn/ubuntu/ jammy-security main restricted universe multiverse
-# deb-src https://mirrors.ustc.edu.cn/ubuntu/ jammy-security main restricted universe multiverse
+Types: deb
+URIs: https://mirrors.ustc.edu.cn/ubuntu
+Suites: resolute-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+# Types: deb-src
+# URIs: https://mirrors.ustc.edu.cn/ubuntu
+# Suites: resolute-security
+# Components: main restricted universe multiverse
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
 # 预发布软件源，不建议启用
-# deb https://mirrors.ustc.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
-# # deb-src https://mirrors.ustc.edu.cn/ubuntu/ jammy-proposed main restricted universe multiverse
-' | sudo tee /etc/apt/sources.list
-sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+
+# Types: deb
+# URIs: https://mirrors.ustc.edu.cn/ubuntu
+# Suites: resolute-proposed
+# Components: main restricted universe multiverse
+# Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+# # Types: deb-src
+# # URIs: https://mirrors.ustc.edu.cn/ubuntu
+# # Suites: resolute-proposed
+# # Components: main restricted universe multiverse
+# # Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+' | sudo tee /etc/apt/sources.list.d/ubuntu.sources
 sudo apt update
 
 ###############################################################################
@@ -96,7 +122,6 @@ sudo apt update
 sudo apt update
 sudo apt install -y cloud-guest-utils
 sudo apt install -y build-essential gcc g++ gdb
-sudo apt install -y build-essential gcc-11 g++-11 gdb
 sudo apt install -y openssh-server openssh-sftp-server openssh-client
 sudo apt install -y sshfs rsync
 sudo apt install -y git
@@ -107,10 +132,13 @@ sudo apt install -y make
 
 # later
 
-qemu-system-x86_64 \
+qemu-system-aarch64 \
+  -machine virt,accel=hvf \
+  -cpu host \
+  -bios edk2-aarch64-code.fd \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2604_arm64.qcow2,format=qcow2 \
+  -drive file=ubuntu2604_arm64.qcow2,format=qcow2,if=virtio \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
   -nographic

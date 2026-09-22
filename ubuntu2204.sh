@@ -113,7 +113,6 @@ sudo apt update
 sudo apt update
 sudo apt install -y cloud-guest-utils
 sudo apt install -y build-essential gcc g++ gdb
-sudo apt install -y build-essential gcc-11 g++-11 gdb
 sudo apt install -y openssh-server openssh-sftp-server openssh-client
 sudo apt install -y sshfs rsync
 sudo apt install -y git
