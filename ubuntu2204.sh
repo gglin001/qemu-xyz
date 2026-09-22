@@ -54,6 +54,7 @@ qemu-system-x86_64 \
   -device virtio-net-pci,netdev=net0 \
   -nographic
 
+# ssh -p 2222 agi@127.0.0.1 -i ~/.ssh/id_ed25519
 ssh -p 2222 agi@127.0.0.1
 # agi
 # 0
