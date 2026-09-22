@@ -5,6 +5,7 @@
 aria2c -x 16 https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
 cp jammy-server-cloudimg-amd64.img ubuntu2204.qcow2
 qemu-img resize ubuntu2204.qcow2 100G
+qemu-img info ubuntu2204.qcow2
 
 ###############################################################################
 

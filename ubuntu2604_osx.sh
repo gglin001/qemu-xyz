@@ -3,6 +3,7 @@
 aria2c -x 16 https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-arm64.img
 cp resolute-server-cloudimg-arm64.img ubuntu2604_arm64.qcow2
 qemu-img resize ubuntu2604_arm64.qcow2 100G
+qemu-img info ubuntu2604_arm64.qcow2
 
 ###############################################################################
 
