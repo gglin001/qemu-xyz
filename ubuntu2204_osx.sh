@@ -3,9 +3,7 @@
 # wget https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img \
 #   -O jammy-server-cloudimg-amd64.img
 aria2c -x 16 https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
-
 cp jammy-server-cloudimg-amd64.img ubuntu2204.qcow2
-
 qemu-img resize ubuntu2204.qcow2 100G
 
 ###############################################################################
@@ -38,8 +36,8 @@ cloud-localds seed.iso user-data meta-data
 qemu-system-x86_64 \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2204.qcow2,format=qcow2 \
-  -drive file=seed.iso,media=cdrom \
+  -drive file=ubuntu2204.qcow2,format=qcow2,if=virtio \
+  -drive file=seed.iso,format=raw,if=virtio,readonly=on \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
   -nographic
@@ -113,7 +111,7 @@ sudo apt install -y make
 qemu-system-x86_64 \
   -m 2G \
   -smp 2 \
-  -drive file=ubuntu2204.qcow2,format=qcow2 \
+  -drive file=ubuntu2204.qcow2,format=qcow2,if=virtio \
   -netdev user,id=net0,hostfwd=tcp::2222-:22 \
   -device virtio-net-pci,netdev=net0 \
   -nographic
