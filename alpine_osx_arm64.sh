@@ -53,7 +53,12 @@ setup-alpine -f /tmp/answerfile
 EOF
 echo "root:0" | chpasswd
 sh auto-install.sh
-apk update
+
+# poweroff
+reboot
+
+###############################################################################
+
 echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.24/community" >>/etc/apk/repositories
 apk update
 
@@ -68,9 +73,9 @@ mkdir -p /etc/sudoers.d
 echo "agi ALL=(ALL:ALL) ALL" >/etc/sudoers.d/agi
 chmod 0440 /etc/sudoers.d/agi
 # test
-su - agi
-sudo whoami
-su - root
+# su - agi
+# sudo whoami
+# su - root
 
 mkdir -p /home/agi/.ssh
 cat <<'EOF' >/home/agi/.ssh/authorized_keys
@@ -94,5 +99,28 @@ chown -R root:root /root/.ssh
 ssh -p 2222 agi@127.0.0.1
 # agi
 # 0
+
+###############################################################################
+
+# ssh USER@10.0.2.2
+
+###############################################################################
+
+# later
+
+qemu-system-aarch64 \
+  -machine virt,accel=hvf \
+  -cpu host \
+  -bios edk2-aarch64-code.fd \
+  -m 2G \
+  -smp 2 \
+  -drive file=alpine_arm64.qcow2,format=qcow2,if=virtio \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -nographic
+
+sudo poweroff
+
+ssh -p 2222 agi@127.0.0.1
 
 ###############################################################################
