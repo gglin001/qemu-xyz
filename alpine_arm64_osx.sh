@@ -111,6 +111,9 @@ echo "Welcome to Alpine!" | sudo tee /etc/motd
 apk update
 apk add git
 
+apk add gcc g++ musl-dev
+apk add zlib-dev zlib-static
+
 ###############################################################################
 
 # later
