@@ -100,7 +100,7 @@ sudo apt update
 sudo apt install -y cloud-guest-utils
 sudo apt install -y build-essential gcc g++ gdb
 sudo apt install -y openssh-server openssh-sftp-server openssh-client
-sudo apt install -y sshfs rsync
+sudo apt install -y sshfs rsync bindfs
 sudo apt install -y git
 sudo apt install -y htop numactl
 sudo apt install -y make
