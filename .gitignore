@@ -1,3 +1,6 @@
 *.iso
 *.img
 *.qcow2
+
+*.raw
+vfkit-efi

@@ -1,16 +1,16 @@
 ###############################################################################
 
 aria2c -x 16 https://cloud-images.ubuntu.com/resolute/current/resolute-server-cloudimg-arm64.img
-cp resolute-server-cloudimg-arm64.img ubuntu2604_arm64.qcow2
-qemu-img resize ubuntu2604_arm64.qcow2 100G
-qemu-img info ubuntu2604_arm64.qcow2
+qemu-img convert -f qcow2 -O raw resolute-server-cloudimg-arm64.img ubuntu2604_arm64_vfkit.raw
+qemu-img resize -f raw ubuntu2604_arm64_vfkit.raw 100G
+qemu-img info ubuntu2604_arm64_vfkit.raw
 
 ###############################################################################
 
 # macos
 # build cloud-utils
 
-cat >user-data <<EOF
+cat >vfkit-user-data <<EOF
 #cloud-config
 users:
   - name: agi
@@ -23,43 +23,59 @@ users:
 chpasswd:
   list: |
     agi:0
+    root:0
   expire: false
 ssh_pwauth: true
+runcmd:
+  - [systemctl, enable, --now, serial-getty@hvc0.service]
 EOF
-touch meta-data
+cat >vfkit-meta-data <<EOF
+instance-id: ubuntu-vfkit
+local-hostname: ubuntu
+EOF
 
-cloud-localds seed.iso user-data meta-data
+# use the MAC as the DHCP identifier so the macos lease lookup stays consistent
+cat >vfkit-network-config <<EOF
+version: 2
+ethernets:
+  vfkit:
+    match:
+      macaddress: '52:54:26:aa:bb:cc'
+    dhcp4: true
+    dhcp-identifier: mac
+EOF
+
+cloud-localds --network-config=vfkit-network-config vfkit-seed.iso vfkit-user-data vfkit-meta-data
 
 ###############################################################################
 
-qemu-system-aarch64 \
-  -machine virt,accel=hvf \
-  -cpu host \
-  -bios edk2-aarch64-code.fd \
-  -m 2G \
-  -smp 2 \
-  -drive file=ubuntu2604_arm64.qcow2,format=qcow2,if=virtio \
-  -drive file=seed.iso,format=raw,if=virtio,readonly=on \
-  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-  -device virtio-net-pci,netdev=net0 \
-  -nographic
+# first boot, wait for cloud-init to enable the hvc0 login console
+# keep this terminal open, use another macos terminal for ssh
 
-# ssh -p 2222 agi@127.0.0.1 -i ~/.ssh/id_ed25519
-ssh -p 2222 agi@127.0.0.1
-# agi
-# 0
+vfkit \
+  --cpus 2 \
+  --memory 2048 \
+  --bootloader efi,variable-store=vfkit-efi,create \
+  --device virtio-blk,path=ubuntu2604_arm64_vfkit.raw \
+  --device virtio-blk,path=vfkit-seed.iso,readonly \
+  --device virtio-net,nat,mac=52:54:26:aa:bb:cc \
+  --device virtio-rng \
+  --device virtio-serial,stdio
 
+# macos, find the VM address from its fixed MAC after DHCP completes
+VM_IP=$(awk 'BEGIN { RS="}" } /hw_address=1,52:54:26:aa:bb:cc/ { for (i=1; i<=NF; i++) if ($i ~ /^ip_address=/) { sub(/^ip_address=/, "", $i); print $i; exit } }' /var/db/dhcpd_leases)
+ssh agi@"$VM_IP"
+
+###############################################################################
+
+# inside the VM
+
+sudo cloud-init status --wait
 df -h /
 lsblk
-sudo growpart /dev/vda 1
-sudo resize2fs /dev/vda1
-df -h /
-
-###############################################################################
-
-# ssh USER@10.0.2.2
-
-###############################################################################
+# cloud-init normally grows the root partition automatically
+# sudo growpart /dev/vda 1
+# sudo resize2fs /dev/vda1
 
 sudo systemctl disable systemd-networkd-wait-online.service
 sudo systemctl mask systemd-networkd-wait-online.service
@@ -133,19 +149,20 @@ sudo apt install -y make
 
 # later
 
-qemu-system-aarch64 \
-  -machine virt,accel=hvf \
-  -cpu host \
-  -bios edk2-aarch64-code.fd \
-  -m 2G \
-  -smp 2 \
-  -drive file=ubuntu2604_arm64.qcow2,format=qcow2,if=virtio \
-  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
-  -device virtio-net-pci,netdev=net0 \
-  -nographic
+vfkit \
+  --cpus 2 \
+  --memory 2048 \
+  --bootloader efi,variable-store=vfkit-efi \
+  --device virtio-blk,path=ubuntu2604_arm64_vfkit.raw \
+  --device virtio-net,nat,mac=52:54:26:aa:bb:cc \
+  --device virtio-rng \
+  --device virtio-serial,stdio
 
+# macos, another terminal
+VM_IP=$(awk 'BEGIN { RS="}" } /hw_address=1,52:54:26:aa:bb:cc/ { for (i=1; i<=NF; i++) if ($i ~ /^ip_address=/) { sub(/^ip_address=/, "", $i); print $i; exit } }' /var/db/dhcpd_leases)
+ssh agi@"$VM_IP"
+
+# inside the VM
 sudo poweroff
-
-ssh -p 2222 agi@127.0.0.1
 
 ###############################################################################

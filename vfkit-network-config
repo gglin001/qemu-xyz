@@ -1,0 +1,7 @@
+version: 2
+ethernets:
+  vfkit:
+    match:
+      macaddress: '52:54:26:aa:bb:cc'
+    dhcp4: true
+    dhcp-identifier: mac
